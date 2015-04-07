@@ -15,8 +15,8 @@ bool DashduinoClient::connect(char host[], int port) {
     _hostname = host;
     _port = port;
 
-    if (!_client.connect(_hostname, _port))
-        return false;
+    _client.stop();
+    _client.connect(_hostname, _port);
 
     getWebSocketKey();
     readWebSocketKey();
@@ -134,7 +134,7 @@ void DashduinoClient::monitor() {
     if (!_client.connected()) {
         while (!connect(_hostname, _port)) {
 #ifdef DEBUG_CLIENT            
-            Serial.println(F("Try reconnect do Dashsuino platform."));
+            Serial.println(F("Try reconnect to Platform."));
 #endif
             delay(10000);
         }
