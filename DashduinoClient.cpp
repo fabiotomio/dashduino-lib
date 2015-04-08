@@ -105,8 +105,8 @@ bool DashduinoClient::readHandshake() {
 void DashduinoClient::send(char *eventCode, char *value) {
     if (_client.connected()) {
 #ifdef DEBUG_CLIENT
-        Serial.print("Send event code: ");
-        Serial.print(*eventCode);
+        Serial.print("Send event: ");
+        Serial.print(eventCode);
         Serial.print(" value: ");
         Serial.println(value);
 #endif
