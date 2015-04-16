@@ -102,19 +102,46 @@ bool DashduinoClient::readHandshake() {
     return true;
 }
 
-void DashduinoClient::send(char *eventCode, char *value) {
+void DashduinoClient::send(char *value) {
     if (_client.connected()) {
 #ifdef DEBUG_CLIENT
-        Serial.print("Send event: ");
-        Serial.print(eventCode);
-        Serial.print(" value: ");
+        Serial.print("Send event with value: ");
         Serial.println(value);
 #endif
         _client.print((char)0);
-        _client.print("5:::{\"name\":\"");
-        _client.print(eventCode);
-        _client.print("\",\"args\":[\"");
+        _client.print("5:::{\"name\":\"event\",\"args\":[\"");
         _client.print(value);
+        _client.print("\"]}");
+        _client.print((char)255);
+    }
+}
+
+void DashduinoClient::message(char *value) {
+    if (_client.connected()) {
+        if(_room){
+#ifdef DEBUG_CLIENT
+            Serial.print("Send message with value: ");
+            Serial.println(value);
+#endif
+            _client.print((char)0);
+            _client.print("5:::{\"name\":\"message\",\"args\":[\"");
+            _client.print(value);
+            _client.print("\"]}");
+            _client.print((char)255);
+        }
+    }
+}
+
+void DashduinoClient::join(char *room) {
+    _room = room;
+    if (_client.connected()) {
+#ifdef DEBUG_CLIENT
+        Serial.print("Join in: ");
+        Serial.println(room);
+#endif
+        _client.print((char)0);
+        _client.print("5:::{\"name\":\"room\",\"args\":[\"");
+        _client.print(room);
         _client.print("\"]}");
         _client.print((char)255);
         delay(1000);
@@ -130,6 +157,7 @@ void DashduinoClient::setEventListener(EventListener eventListener) {
 void DashduinoClient::monitor() {
 
     *_buffer = 0;
+    *_buffer_event = 0;
 
     if (!_client.connected()) {
         while (!connect(_hostname, _port)) {
@@ -170,20 +198,35 @@ void DashduinoClient::monitor() {
                 continue;
         }
 
+        // parse name
         findColon(which);
         _data += 2;
 
-        // handle backslash-delimited escapes
-        char *optr = _buffer;
+        char *optr = _buffer_event;
         while (*_data && (*_data != '"')) {
             if (*_data == '\\') {
-                ++_data;      // todo: this just handles "; handle \r, \n, \t, \xdd
+                ++_data;
             }
             *optr++ = *_data++;
         }
+
         *optr = 0;
 
-        if (_eventListener != NULL) _eventListener(_buffer);
+
+        // pula alguns caracteres
+        findBracket(0);
+        _data += 2;
+
+        char *optr2 = _buffer;
+        while (*_data && (*_data != '"') ) {
+            if (*_data == '\\') {
+                ++_data;
+            }
+            *optr2++ = *_data++;
+        }
+        *optr2 = 0;
+
+        if (_eventListener != NULL) _eventListener( _buffer_event, _buffer);
     }
 }
 
@@ -196,9 +239,18 @@ void DashduinoClient::disconnect() {
 }
 
 // Utils ----------------------------------------------------------------------
-void DashduinoClient::findColon(char which) {    
+void DashduinoClient::findColon(char which) {
     while (*_data) {
         if (*_data == ':') {
+            if (--which <= 0) return;
+        }
+        ++_data;
+    }
+}
+
+void DashduinoClient::findBracket(char which) {
+    while (*_data) {
+        if (*_data == '[') {
             if (--which <= 0) return;
         }
         ++_data;
