@@ -19,7 +19,7 @@
 
 class DashduinoClient {
     public:
-        typedef void (*EventListener)(char *event, char *data);
+        typedef void (*EventListener)(char *name, char *data);
         void setEventListener(EventListener eventListener);
         
         bool connect(char hostname[], int port = 80);
