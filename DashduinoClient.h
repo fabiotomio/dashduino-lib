@@ -9,23 +9,25 @@
  Copyright (c) 2014 Dashduino.com
  */
 #include "Arduino.h"
-#include <UIPEthernet.h>
+#include <Ethernet.h>
 #include "SPI.h"
 
 #define BUFFER_SIZE 120
 #define WEBSOCKET_KEY_LENGTH 24
 
-// #define DEBUG_CLIENT
+#define DEBUG_CLIENT
 
 class DashduinoClient {
     public:
-        typedef void (*EventListener)(char *data);
+        typedef void (*EventListener)(char *name, char *data);
         void setEventListener(EventListener eventListener);
         
         bool connect(char hostname[], int port = 80);
         void disconnect();
 
-        void send(char *eventCode, char *value);
+        void send(char *value);
+        void message(char *value);
+        void join(char *room);
         bool connected();
         void monitor();
         
@@ -34,11 +36,13 @@ class DashduinoClient {
         EventListener _eventListener;
     
         char *_hostname;
+        char *_room;
         int _port;
         char _socket_key[WEBSOCKET_KEY_LENGTH];
 
         char *_data;
         char _buffer[BUFFER_SIZE];
+        char _buffer_event[BUFFER_SIZE];
         
         void getWebSocketKey();
         bool readWebSocketKey();
@@ -50,4 +54,5 @@ class DashduinoClient {
         bool waitData(void);
         void readLine();
         void findColon(char which);
+        void findBracket(char which);
 };

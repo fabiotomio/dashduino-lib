@@ -22,7 +22,7 @@ Você precisa clonar esse repositório no diretórico com as bibliotecas do seu 
 #include "UIPEthernet.h"
 #include "DashduinoClient.h"
 
-byte mac[] = { 0x01, 0x02, 0x03, 0x04, 0xFA, 0x10 };
+byte mac[] = { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
 DashduinoClient dashduino;
 
 void setup() {
@@ -32,9 +32,9 @@ void setup() {
   // listener function
   dashduino.setEventListener(eventListener);
   // connect to dashduino platform
-  dashduino.connect("ws.dashduino.com", 3000);
+  dashduino.connect("dashduino-staging.herokuapp.com", 80);
   // send event do platform
-  dashduino.send("1","Arduino connected.");
+  dashduino.message("Arduino conectado.");
 }
 
 void loop() {
@@ -42,7 +42,10 @@ void loop() {
 }
 
 // receive events from dashduino platform
-void eventListener(char *data) {
+void eventListener(char *name, char *data) {
+  Serial.print("Received ");
+  Serial.print(name);
+  Serial.print(" data: ");
   Serial.println(data);
 }
 ```
